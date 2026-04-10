@@ -1,0 +1,22 @@
+<header class="topbar">
+  <a href="/dashboard" class="topbar-logo">
+    <div class="topbar-logo-icon">⬡</div>
+    <span class="topbar-title">NetCalc Pro</span>
+  </a>
+  <div class="topbar-sep"></div>
+  <span class="topbar-sub">VLSM · FLSM · Cisco CLI</span>
+  <nav class="topbar-nav">
+    <a href="/dashboard" class="topbar-link {{ 'active' if request.path == '/dashboard' }}">Dashboard</a>
+    <a href="/calculator" class="topbar-link {{ 'active' if request.path == '/calculator' }}">Calculator</a>
+  </nav>
+  <div class="topbar-right">
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      OFFLINE
+    </div>
+    <div class="user-chip">
+      <span>{{ username }}</span>
+    </div>
+    <a href="/logout" class="btn btn-ghost btn-sm">Logout</a>
+  </div>
+</header>

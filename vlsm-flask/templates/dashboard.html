@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard — NetCalc Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/css/app.css"/>
+</head>
+<body>
+{% include 'partials/topbar.html' %}
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-sub">Welcome back, <span class="text-blue">{{ username }}</span></p>
+    </div>
+    <a href="/calculator" class="btn btn-primary">▶ Open Calculator</a>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon icon-blue">⚙</div>
+      <div class="stat-body">
+        <div class="stat-val">{{ history|length }}</div>
+        <div class="stat-label">Calculations</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-green">🖥</div>
+      <div class="stat-body">
+        <div class="stat-val">∞</div>
+        <div class="stat-label">CLI Ready</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-orange">📡</div>
+      <div class="stat-body">
+        <div class="stat-val">4</div>
+        <div class="stat-label">Protocols</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-purple">🔒</div>
+      <div class="stat-body">
+        <div class="stat-val">OFF</div>
+        <div class="stat-label">Offline Mode</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Calculations -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon icon-blue">📋</div>
+      <div>
+        <h2>Recent Calculations</h2>
+        <p>Last 10 subnet calculations</p>
+      </div>
+      <a href="/calculator" class="btn btn-ghost btn-sm" style="margin-left:auto">+ New</a>
+    </div>
+    <div class="card-body" style="padding:0">
+      {% if history %}
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Base Network</th>
+            <th>Mode</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in history %}
+          <tr>
+            <td class="muted mono">{{ row.id }}</td>
+            <td>{{ row.title }}</td>
+            <td class="mono blue">{{ row.base_net }}</td>
+            <td><span class="badge {{ 'badge-vlsm' if row.mode == 'vlsm' else 'badge-flsm' }}">{{ row.mode.upper() }}</span></td>
+            <td class="muted small">{{ row.created_at[:16] }}</td>
+            <td><button class="btn btn-ghost btn-xs" onclick="loadHistory({{ row.id }})">Load</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <p>No calculations yet.</p>
+        <a href="/calculator" class="btn btn-primary btn-sm" style="margin-top:12px">Calculate Now</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Protocol Reference -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon icon-purple">📡</div>
+      <div><h2>Protocol Reference</h2><p>Administrative Distance · Cisco IOS</p></div>
+    </div>
+    <div class="card-body">
+      <div class="proto-ref-grid">
+        <div class="proto-ref-card">
+          <div class="proto-ref-name" style="color:var(--blue-h)">Static</div>
+          <div class="proto-ref-ad">AD: 1</div>
+          <div class="proto-ref-desc">Manual routes. Best for small, stable networks.</div>
+        </div>
+        <div class="proto-ref-card">
+          <div class="proto-ref-name" style="color:var(--green-h)">RIP v2</div>
+          <div class="proto-ref-ad">AD: 120</div>
+          <div class="proto-ref-desc">Distance vector. Max 15 hops. Classful network statements.</div>
+        </div>
+        <div class="proto-ref-card">
+          <div class="proto-ref-name" style="color:var(--orange)">EIGRP</div>
+          <div class="proto-ref-ad">AD: 90</div>
+          <div class="proto-ref-desc">Hybrid. Fast convergence. Wildcard masks. AS must match.</div>
+        </div>
+        <div class="proto-ref-card">
+          <div class="proto-ref-name" style="color:#a78bfa">OSPF</div>
+          <div class="proto-ref-ad">AD: 110</div>
+          <div class="proto-ref-desc">Link-state. Area 0. Wildcard masks. Cost-based metric.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+function loadHistory(id) {
+  fetch('/api/history/' + id)
+    .then(r => r.json())
+    .then(data => {
+      localStorage.setItem('vlsm_load', JSON.stringify(data));
+      window.location.href = '/calculator';
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Calculator — NetCalc Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/css/app.css"/>
+</head>
+<body>
+{% include 'partials/topbar.html' %}
+
+<main class="main">
+
+  <!-- ── SUBNET CALCULATOR ─────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon icon-blue">⚙</div>
+      <div>
+        <h2>Subnet Calculator</h2>
+        <p>VLSM — Variable Length &nbsp;|&nbsp; FLSM — Fixed Length</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="vlsm" onclick="setMode('vlsm')">VLSM</button>
+        <button class="mode-tab" data-mode="flsm" onclick="setMode('flsm')">FLSM</button>
+      </div>
+
+      <!-- VLSM -->
+      <div id="vlsmInputs">
+        <div class="form-row">
+          <div class="field">
+            <label class="field-label">Base Network Address</label>
+            <input type="text" id="vlsmNet" placeholder="e.g. 192.168.10.0" />
+          </div>
+        </div>
+        <div class="section-label">Host Requirements</div>
+        <div id="vlsmList"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addVlsmEntry()" style="margin-top:8px">
+          + Add Subnet
+        </button>
+      </div>
+
+      <!-- FLSM -->
+      <div id="flsmInputs" class="hidden">
+        <div class="form-row">
+          <div class="field">
+            <label class="field-label">Network Address</label>
+            <input type="text" id="flsmNet" placeholder="e.g. 192.168.1.0" />
+          </div>
+          <div class="field">
+            <label class="field-label">Mask / Prefix</label>
+            <input type="text" id="flsmMask" placeholder="e.g. 24" style="width:130px" />
+          </div>
+          <div class="field">
+            <label class="field-label">Subnet Count</label>
+            <input type="number" id="flsmCount" placeholder="e.g. 4" min="1" style="width:120px" />
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="calculate()">▶ Calculate</button>
+        <button class="btn btn-ghost" onclick="resetCalc()">↺ Reset</button>
+      </div>
+      <div id="calcError" class="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- ── RESULT TABLE ───────────────────────────────────── -->
+  <div class="card hidden" id="resultCard">
+    <div class="table-info-row" id="tableInfoRow">
+      <span id="tableTitle">—</span>
+      <span class="next-label">Next Available:</span>
+      <span class="next-addr" id="nextAvail">—</span>
+    </div>
+    <div class="table-wrap">
+      <table class="subnet-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Hosts</th><th>CIDR</th><th>Octet</th>
+            <th>Increment</th><th>Network ID</th><th>Mask</th>
+            <th>1st Usable</th><th>Last Usable</th><th>Broadcast</th>
+          </tr>
+        </thead>
+        <tbody id="subnetTbody"></tbody>
+      </table>
+    </div>
+    <div class="table-actions">
+      <button class="btn btn-ghost btn-sm" onclick="scrollToSection('cliCard')">↓ Configure CLI</button>
+    </div>
+  </div>
+
+  <!-- ── CLI GENERATOR ─────────────────────────────────── -->
+  <div class="card hidden" id="cliCard">
+    <div class="card-header">
+      <div class="card-header-icon icon-purple">🖥</div>
+      <div>
+        <h2>Routing Configuration Generator</h2>
+        <p>Generates Cisco IOS CLI — paste directly into Packet Tracer</p>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <!-- Topology -->
+      <div class="section-label">Topology</div>
+      <div class="topo-row">
+        <button class="topo-btn active" id="topoRing" onclick="setTopo('ring')">
+          🔄 Ring <span class="topo-hint">(N links)</span>
+        </button>
+        <button class="topo-btn" id="topoBus" onclick="setTopo('bus')">
+          ➡ Bus <span class="topo-hint">(N−1 links)</span>
+        </button>
+      </div>
+
+      <!-- Protocol -->
+      <div class="section-label">Routing Protocol</div>
+      <div class="proto-row">
+        <button class="proto-btn pb-static active" data-proto="static" onclick="setProto('static')">
+          <div class="proto-icon">🔗</div>
+          <div class="proto-label">Static</div>
+        </button>
+        <button class="proto-btn pb-rip" data-proto="rip" onclick="setProto('rip')">
+          <div class="proto-icon">📡</div>
+          <div class="proto-label">RIP v2</div>
+        </button>
+        <button class="proto-btn pb-eigrp" data-proto="eigrp" onclick="setProto('eigrp')">
+          <div class="proto-icon">⚡</div>
+          <div class="proto-label">EIGRP</div>
+        </button>
+        <button class="proto-btn pb-ospf" data-proto="ospf" onclick="setProto('ospf')">
+          <div class="proto-icon">🔷</div>
+          <div class="proto-label">OSPF</div>
+        </button>
+      </div>
+
+      <div id="eigrpAsField" class="proto-extra hidden">
+        <label class="field-label">EIGRP AS Number</label>
+        <input type="number" id="eigrpAs" value="100" min="1" max="65535" style="width:110px"/>
+      </div>
+      <div id="ospfPidField" class="proto-extra hidden">
+        <label class="field-label">OSPF Process ID</label>
+        <input type="number" id="ospfPid" value="1" min="1" style="width:110px"/>
+      </div>
+
+      <!-- Routers -->
+      <div class="section-label" style="margin-top:16px">Routers</div>
+      <div class="router-controls">
+        <button class="btn btn-primary btn-sm" onclick="addRouter()">+ Add Router</button>
+        <button class="btn btn-danger-outline btn-sm" onclick="removeLastRouter()">− Remove</button>
+        <span class="router-count" id="routerBadge">0 Routers</span>
+      </div>
+      <div id="routerGrid" class="router-grid"></div>
+
+      <!-- Serial Links -->
+      <div class="section-label" style="margin-top:4px">Serial Links (WAN /30)</div>
+      <div id="serialHint" class="serial-hint">Add at least 2 routers.</div>
+      <div id="serialList"></div>
+
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn btn-primary" onclick="generateCLI()">▶ Generate CLI</button>
+        <button class="btn btn-ghost" onclick="resetCLI()">↺ Reset</button>
+      </div>
+      <div id="cliError" class="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- ── CLI OUTPUT ─────────────────────────────────────── -->
+  <div class="card hidden" id="cliOutput">
+    <div class="card-header">
+      <div class="card-header-icon icon-green">📟</div>
+      <div>
+        <h2>CLI Output</h2>
+        <p>Stage 1: Interfaces &nbsp;·&nbsp; Stage 2: Routing</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="copyAllCLI()" style="margin-left:auto">⎘ Copy All</button>
+    </div>
+    <div class="card-body" id="cliOutputBody"></div>
+  </div>
+
+</main>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
